@@ -81,6 +81,7 @@ import com.mongodb.ReadPreference;
  * 
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
@@ -537,6 +538,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		assertThat(captor.getValue().getLimit(), is(1000));
 	}
+
 	/**
 	 * @see DATAMONGO-1348
 	 */
@@ -573,10 +575,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<DBObject> capture = ArgumentCaptor.forClass(DBObject.class);
 		verify(this.db, times(1)).command(capture.capture());
 
-		assertThat(
-				capture.getValue(),
-				IsBsonObject.isBsonObject().containing("near.type", "Point").containing("near.coordinates.[0]", 1D)
-						.containing("near.coordinates.[1]", 2D));
+		assertThat(capture.getValue(), IsBsonObject.isBsonObject().containing("near.type", "Point")
+				.containing("near.coordinates.[0]", 1D).containing("near.coordinates.[1]", 2D));
 	}
 
 	static class WithNamedFields {
@@ -586,7 +586,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		String name;
 		@Field("custom-named-field") String customName;
 	}
-	
+
 	class AutogenerateableId {
 
 		@Id BigInteger id;

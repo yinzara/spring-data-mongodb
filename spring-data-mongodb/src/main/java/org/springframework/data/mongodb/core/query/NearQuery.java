@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Arrays;
 
 import org.springframework.data.domain.Pageable;
@@ -34,10 +32,11 @@ import com.mongodb.DBObject;
 
 /**
  * Builder class to build near-queries.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public final class NearQuery {
 
@@ -50,11 +49,9 @@ public final class NearQuery {
 	private Integer num;
 	private Integer skip;
 
-	private static int PRECISION = 8;
-
 	/**
 	 * Creates a new {@link NearQuery}.
-	 * 
+	 *
 	 * @param point
 	 */
 	private NearQuery(Point point, Metric metric) {
@@ -71,9 +68,9 @@ public final class NearQuery {
 
 	/**
 	 * Creates a new {@link NearQuery} starting near the given coordinates.
-	 * 
-	 * @param i
-	 * @param j
+	 *
+	 * @param x
+	 * @param y
 	 * @return
 	 */
 	public static NearQuery near(double x, double y) {
@@ -84,7 +81,7 @@ public final class NearQuery {
 	 * Creates a new {@link NearQuery} starting at the given coordinates using the given {@link Metric} to adapt given
 	 * values to further configuration. E.g. setting a {@link #maxDistance(double)} will be interpreted as a value of the
 	 * initially set {@link Metric}.
-	 * 
+	 *
 	 * @param x
 	 * @param y
 	 * @param metric
@@ -96,7 +93,7 @@ public final class NearQuery {
 
 	/**
 	 * Creates a new {@link NearQuery} starting at the given {@link Point}.
-	 * 
+	 *
 	 * @param point must not be {@literal null}.
 	 * @return
 	 */
@@ -108,7 +105,7 @@ public final class NearQuery {
 	 * Creates a {@link NearQuery} starting near the given {@link Point} using the given {@link Metric} to adapt given
 	 * values to further configuration. E.g. setting a {@link #maxDistance(double)} will be interpreted as a value of the
 	 * initially set {@link Metric}.
-	 * 
+	 *
 	 * @param point must not be {@literal null}.
 	 * @param metric
 	 * @return
@@ -121,7 +118,7 @@ public final class NearQuery {
 	/**
 	 * Returns the {@link Metric} underlying the actual query. If no metric was set explicitly {@link Metrics#NEUTRAL}
 	 * will be returned.
-	 * 
+	 *
 	 * @return will never be {@literal null}.
 	 */
 	public Metric getMetric() {
@@ -130,7 +127,7 @@ public final class NearQuery {
 
 	/**
 	 * Configures the maximum number of results to return.
-	 * 
+	 *
 	 * @param num
 	 * @return
 	 */
@@ -141,7 +138,7 @@ public final class NearQuery {
 
 	/**
 	 * Configures the number of results to skip.
-	 * 
+	 *
 	 * @param skip
 	 * @return
 	 */
@@ -152,7 +149,7 @@ public final class NearQuery {
 
 	/**
 	 * Configures the {@link Pageable} to use.
-	 * 
+	 *
 	 * @param pageable must not be {@literal null}
 	 * @return
 	 */
@@ -167,13 +164,13 @@ public final class NearQuery {
 	/**
 	 * Sets the max distance results shall have from the configured origin. If a {@link Metric} was set before the given
 	 * value will be interpreted as being a value in that metric. E.g.
-	 * 
+	 *
 	 * <pre>
 	 * NearQuery query = near(10.0, 20.0, Metrics.KILOMETERS).maxDistance(150);
 	 * </pre>
-	 * 
+	 *
 	 * Will set the maximum distance to 150 kilometers.
-	 * 
+	 *
 	 * @param maxDistance
 	 * @return
 	 */
@@ -184,7 +181,7 @@ public final class NearQuery {
 	/**
 	 * Sets the maximum distance supplied in a given metric. Will normalize the distance but not reconfigure the query's
 	 * result {@link Metric} if one was configured before.
-	 * 
+	 *
 	 * @param maxDistance
 	 * @param metric must not be {@literal null}.
 	 * @return
@@ -198,7 +195,7 @@ public final class NearQuery {
 	/**
 	 * Sets the maximum distance to the given {@link Distance}. Will set the returned {@link Metric} to be the one of the
 	 * given {@link Distance} if no {@link Metric} was set before.
-	 * 
+	 *
 	 * @param distance must not be {@literal null}.
 	 * @return
 	 */
@@ -221,13 +218,13 @@ public final class NearQuery {
 	/**
 	 * Sets the minimum distance results shall have from the configured origin. If a {@link Metric} was set before the
 	 * given value will be interpreted as being a value in that metric. E.g.
-	 * 
+	 *
 	 * <pre>
 	 * NearQuery query = near(10.0, 20.0, Metrics.KILOMETERS).minDistance(150);
 	 * </pre>
-	 * 
+	 *
 	 * Will set the minimum distance to 150 kilometers.
-	 * 
+	 *
 	 * @param minDistance
 	 * @return
 	 * @since 1.7
@@ -239,7 +236,7 @@ public final class NearQuery {
 	/**
 	 * Sets the minimum distance supplied in a given metric. Will normalize the distance but not reconfigure the query's
 	 * result {@link Metric} if one was configured before.
-	 * 
+	 *
 	 * @param minDistance
 	 * @param metric must not be {@literal null}.
 	 * @return
@@ -254,7 +251,7 @@ public final class NearQuery {
 	/**
 	 * Sets the minimum distance to the given {@link Distance}. Will set the returned {@link Metric} to be the one of the
 	 * given {@link Distance} if no {@link Metric} was set before.
-	 * 
+	 *
 	 * @param distance must not be {@literal null}.
 	 * @return
 	 * @since 1.7
@@ -277,7 +274,7 @@ public final class NearQuery {
 
 	/**
 	 * Returns the maximum {@link Distance}.
-	 * 
+	 *
 	 * @return
 	 */
 	public Distance getMaxDistance() {
@@ -286,7 +283,7 @@ public final class NearQuery {
 
 	/**
 	 * Returns the maximum {@link Distance}.
-	 * 
+	 *
 	 * @return
 	 * @since 1.7
 	 */
@@ -296,7 +293,7 @@ public final class NearQuery {
 
 	/**
 	 * Configures a {@link CustomMetric} with the given multiplier.
-	 * 
+	 *
 	 * @param distanceMultiplier
 	 * @return
 	 */
@@ -308,7 +305,7 @@ public final class NearQuery {
 
 	/**
 	 * Configures the distance multiplier to the multiplier of the given {@link Metric}.
-	 * 
+	 *
 	 * @deprecated use {@link #in(Metric)} instead.
 	 * @param metric must not be {@literal null}.
 	 * @return
@@ -321,7 +318,7 @@ public final class NearQuery {
 
 	/**
 	 * Configures whether to return spherical values for the actual distance.
-	 * 
+	 *
 	 * @param spherical
 	 * @return
 	 */
@@ -332,7 +329,7 @@ public final class NearQuery {
 
 	/**
 	 * Returns whether spharical values will be returned.
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean isSpherical() {
@@ -342,7 +339,7 @@ public final class NearQuery {
 	/**
 	 * Will cause the results' distances being returned in kilometers. Sets {@link #distanceMultiplier(double)} and
 	 * {@link #spherical(boolean)} accordingly.
-	 * 
+	 *
 	 * @return
 	 */
 	public NearQuery inKilometers() {
@@ -352,7 +349,7 @@ public final class NearQuery {
 	/**
 	 * Will cause the results' distances being returned in miles. Sets {@link #distanceMultiplier(double)} and
 	 * {@link #spherical(boolean)} accordingly.
-	 * 
+	 *
 	 * @return
 	 */
 	public NearQuery inMiles() {
@@ -362,7 +359,7 @@ public final class NearQuery {
 	/**
 	 * Will cause the results' distances being returned in the given metric. Sets {@link #distanceMultiplier(double)}
 	 * accordingly as well as {@link #spherical(boolean)} if the given {@link Metric} is not {@link Metrics#NEUTRAL}.
-	 * 
+	 *
 	 * @param metric the metric the results shall be returned in. Uses {@link Metrics#NEUTRAL} if {@literal null} is
 	 *          passed.
 	 * @return
@@ -374,7 +371,7 @@ public final class NearQuery {
 	/**
 	 * Configures the given {@link Metric} to be used as base on for this query and recalculate the maximum distance if no
 	 * metric was set before.
-	 * 
+	 *
 	 * @param metric
 	 */
 	private NearQuery adaptMetric(Metric metric) {
@@ -389,7 +386,7 @@ public final class NearQuery {
 
 	/**
 	 * Adds an actual query to the {@link NearQuery} to restrict the objects considered for the actual near operation.
-	 * 
+	 *
 	 * @param query must not be {@literal null}.
 	 * @return
 	 */
@@ -414,7 +411,7 @@ public final class NearQuery {
 
 	/**
 	 * Returns the {@link DBObject} built by the {@link NearQuery}.
-	 * 
+	 *
 	 * @return
 	 */
 	public DBObject toDBObject() {
@@ -434,45 +431,38 @@ public final class NearQuery {
 		}
 
 		if (metric != null) {
-			dbObject.put(
-					"distanceMultiplier",
-					usesMetricSystem() ? getMetricSystemNormalizer(metric).divide(new BigDecimal(1000), PRECISION + 3,
-							RoundingMode.HALF_UP).doubleValue() : metric.getMultiplier());
+			dbObject.put("distanceMultiplier", getDistanceMultiplier());
 		}
 
 		if (num != null) {
 			dbObject.put("num", num);
 		}
 
-		if (point instanceof GeoJsonPoint) {
+		if (usesGeoJson()) {
 			dbObject.put("near", point);
 		} else {
 			dbObject.put("near", Arrays.asList(point.getX(), point.getY()));
 		}
 
-		dbObject.put("spherical", spherical ? spherical : point instanceof GeoJson);
+		dbObject.put("spherical", spherical ? spherical : usesGeoJson());
 
 		return dbObject;
 	}
 
+	private double getDistanceMultiplier() {
+		return usesMetricSystem() ? MetricConversion.getMetersToMetricMultiplier(metric) : metric.getMultiplier();
+	}
+
 	private double getDistanceValueInRadiantsOrMeters(Distance distance) {
-		return usesMetricSystem() ? getDistanceInMeters(distance) : distance.getNormalizedValue();
-	}
-
-	private double getDistanceInMeters(Distance distance) {
-
-		return new BigDecimal(distance.getValue()).multiply(getMetricSystemNormalizer(distance.getMetric()))
-				.multiply(new BigDecimal(1000)).doubleValue();
-	}
-
-	private BigDecimal getMetricSystemNormalizer(Metric metric) {
-
-		return new BigDecimal(Metrics.KILOMETERS.getMultiplier()).divide(new BigDecimal(metric.getMultiplier()), PRECISION,
-				RoundingMode.HALF_UP);
+		return usesMetricSystem() ? MetricConversion.getDistanceInMeters(distance) : distance.getNormalizedValue();
 	}
 
 	private boolean usesMetricSystem() {
-		return point instanceof GeoJson;
+		return usesGeoJson();
+	}
+
+	private boolean usesGeoJson() {
+		return point instanceof GeoJsonPoint;
 	}
 
 }
