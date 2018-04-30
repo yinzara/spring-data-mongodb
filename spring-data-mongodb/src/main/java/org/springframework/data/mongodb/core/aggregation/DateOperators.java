@@ -204,7 +204,7 @@ public class DateOperators {
 		 * @param timezone
 		 * @since 2.1
 		 */
-		private DateOperatorFactory(@Nullable String fieldReference, @Nullable AggregationExpression expression,
+		protected DateOperatorFactory(@Nullable String fieldReference, @Nullable AggregationExpression expression,
 				@Nullable Object value, Timezone timezone) {
 
 			this.fieldReference = fieldReference;
